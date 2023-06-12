@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <title>签到墙</title>
+    <style type="text/css">
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            /*background-color: #163d1c;*/
+            background-image:url(./img.png);
+            margin: 0;
+            font-family: Helvetica, sans-serif;
+            overflow: hidden;
+        }
+
+        /*选择按钮样式start*/
+        #menu {
+            position: absolute;
+            z-index: 100;
+            width: 100%;
+            bottom: 50px;
+            text-align: center;
+            font-size: 32px
+        }
+
+        button {
+            border: none;
+            background-color: transparent;
+            color: rgba(253, 246, 185, 0.75);
+            padding: 12px 24px;
+            cursor: pointer;
+            outline: 1px solid rgba(243, 230, 135, 0.75);
+        }
+
+        button:hover {
+            background-color: rgba(250, 243, 216, 0.5)
+        }
+
+        button:active {
+            background-color: rgba(255, 219, 127, 0.75)
+        }
+        /*end*/
+
+        /*元素样式start*/
+        .element {
+            width: 120px;
+            height: 160px;
+            cursor: default;
+            text-align: center;
+            border: 2px solid rgba( 254, 232, 235 0.25 );
+            box-shadow: 0 0 12px rgba( 255, 250,227, 0.5 );
+            /*transition: all 0.3s ease-in-out;*/
+        }
+
+        .element:hover{
+            border: 4px solid rgba(254, 232, 235, 0.75);
+            box-shadow: 0 0 12px rgba(255, 250,227, 0.75);
+            /*transform: scale(6);*/
+        }
+
+        .element .number {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 12px;
+            color: rgba(199, 162, 115, 0.75);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.95);
+        }
+
+        .element .symbol {
+            position: relative;
+            top: 20px;
+            left: 0px;
+            right: 0;
+            font-size: 30px;
+            font-weight: bold;
+            /*color: rgba( 132, 89, 34, 0.75 );*/
+            /*text-shadow: 0 0 10px rgba(252, 240, 240, 0.95);*/
+            color: rgba(2, 2, 2, 0.75);
+            text-shadow: 0 0 35px rgba(255, 255, 255, 0.98);
+        }
+
+        .element .detail {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 15px;
+            font-size: 12px;
+            color: rgba( 132, 89, 34, 0.75 );
+            text-shadow: 0 0 10px rgba(252, 240, 240, 0.95);
+        }
+        /*end*/
+    </style>
+</head>
+<body>
+<div id="container">
+    <!-- 选中菜单结构 start-->
+    <div id="menu">
+        <button id="table">表格</button>
+        <button id="sphere">球体</button>
+        <button id="helix">螺旋体</button>
+        <button id="grid">矩阵</button>
+    </div>
+    <!-- end -->
+</div>
+<!-- 3d图形库 -->
+<script src="./three.min.js"></script>
+<!-- 轻量级动画库‘补间’ -->
+<script src="./tween.min.js"></script>
+<!-- 轨迹球控制器库 -->
+<script src="./TrackballControls.js"></script>
+<!-- css3D渲染器 -->
+<script src="./CSS3DRenderer.js"></script>
+
+<script>
+    // var personArray=[
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fi-1.lanrentuku.com%2F2020%2F11%2F5%2Fdef6ed04-6d34-402e-99c8-366266f627dd.png%3FimageView2%2F2%2Fw%2F500&refer=http%3A%2F%2Fi-1.lanrentuku.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537033&t=8a814189bdfda4586b010206c2e39f59",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic%2Ffe%2F11%2F97%2Ffe119792285b42e687ebf4367f77c8de.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537033&t=e32c6be9d07849fffdea6d44964e2c1c",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic_source%2F56%2F51%2Fc0%2F5651c08bdb088ba8102b279518b57574.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537033&t=c49c98cef549fa7c2e66886e905ec73d",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fnimg.ws.126.net%2F%3Furl%3Dhttp%253A%252F%252Fdingyue.ws.126.net%252F2021%252F0314%252F94ad46dbj00qpy1do0021d200rs00rsg008t008t.jpg%26thumbnail%3D650x2147483647%26quality%3D80%26type%3Djpg&refer=http%3A%2F%2Fnimg.ws.126.net&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537033&t=1665ae547281f883eefb4d47558622c5",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic_source%2F91%2F81%2Fd7%2F9181d7d8787f7e96f0017da5e61ad27d.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537033&t=cd69329bab0ac139986e4b14f65e1361",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic%2Ffd%2F51%2Fa4%2Ffd51a4f8eb6575f98a15408b4aaa90de.png&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537033&t=ba1b1e7d946f5f58e37f4091d127ca28",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fc-ssl.duitang.com%2Fuploads%2Fitem%2F202007%2F04%2F20200704075609_ejqjf.jpg&refer=http%3A%2F%2Fc-ssl.duitang.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537033&t=d7a061086a55ceeb5c456a6e409e2a27",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic_source%2F33%2F6d%2F82%2F336d82ec4a3fc5cf5add5c347946452e.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537033&t=50b78e34f631ecec0f43209573efa690",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic%2F82%2F1f%2Ff3%2F821ff347ee938bb7031315d2f0455931.jpeg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537033&t=fd08b4bdb60c8b8f280251297d238d9f",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic%2F5c%2F78%2F8e%2F5c788e631f9a5864737d6b2f4b55e0dd.jpeg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537033&t=0d5ffb67ed01bc3a694346ddd557e23f",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic%2Fc9%2F63%2F77%2Fc963777ebd9c8ebf5583b39565cfa1d7.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537033&t=59a875b623f27edd4ecdd9ce7cad57a7",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic_source%2F9e%2F32%2F9a%2F9e329acc0c79523b0204f6ed7ea1e45e.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537033&t=2e540f8bda55c44252bb9e3dc25be4e8",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic_source%2F1a%2Fce%2F7d%2F1ace7d98b0afc38c00ba070f7b07603b.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537033&t=f30e8d784fb27aaaec1e2a0c3d5a7b8f",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic%2F64%2F9b%2F86%2F649b86bf87b4c0516a2cf058b8c19022.jpeg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537033&t=9710cb49727636bef6779c678f04babf",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic%2F85%2F03%2Faf%2F8503af9a8b0ca227a0bd9be9ddc76e84.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537033&t=1aa629a7d23a3cff50875b7f81a7194b",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic_source%2F8a%2Fa5%2F42%2F8aa5425d2b6a40823e67a324f0959ef5.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537033&t=66dd06f63e4b7736209a947e51b8c8c2",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic%2F09%2F44%2F5d%2F09445d7fe08dc405a67b8bff169f9825.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537033&t=c6894f180c4b175a0348ba949f7ef2f8",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic%2Fa3%2Fdd%2F26%2Fa3dd26ee5649ee4841d24495bf381885.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537033&t=544b11bef3b0c7776dd13dcfd1f056f9",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic_source%2F92%2F24%2F66%2F92246617e53e62c5f0d954f03ec00611.jpeg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537033&t=19276cdd68c43a54f7e751175bf2d65e",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic_source%2F14%2F91%2Fce%2F1491ce2c32a6a195ed705f7d743135ae.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537033&t=1c7fe8f54abb1ef171008617b4589723",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic%2Fe3%2Fca%2F35%2Fe3ca35660c3c098e6e3b89b999b9c7af.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537033&t=6ab9df418c4b160ae20c31caac043644",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic_source%2F0c%2Fef%2Fa0%2F0cefa0f17b83255217eddc20b15395f9.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537033&t=bb1019675f5e3fa643e407ed70e8f64f",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fc-ssl.duitang.com%2Fuploads%2Fitem%2F202006%2F30%2F20200630085145_LYHsV.jpeg&refer=http%3A%2F%2Fc-ssl.duitang.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537033&t=567ccfaaac0553fea8acd8f47fd71758",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic_source%2F72%2F0e%2F0b%2F720e0bfb911a38a59757b9b39e26aecc.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537033&t=cd7dbdce3b94e9577c44353200287455",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic_source%2Fb8%2Fdb%2Fb6%2Fb8dbb65196f211b50b07fb93716dda65.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537033&t=690ddb264c3ff93ac8f7281fb99c43c8",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic%2F82%2F45%2F8d%2F82458d7f8f7ce6d2ec91b5d8863d5f28.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537223&t=3b0d003eb39951f4375d6709bba68cf6",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic%2F5e%2Ff4%2Fd5%2F5ef4d5cf6643bae30b5953fc1ae9b207.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537223&t=0c39ff436999bbdcef1e9aa388122669",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic_source%2Fdf%2Fd5%2F50%2Fdfd55058140ffa0ff8ce4257d5b1e74b.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537223&t=bd2e4bf406035d45a39369cb9d85baed",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic_source%2F7e%2Fe3%2F63%2F7ee36374e1e2e7eb1ed7638ac3833f65.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537223&t=1d2dd773bbe50c973d9a532a58f21f52",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic%2F52%2Fc9%2F24%2F52c924bd5db63b23aeb4ebb41de4192e.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537223&t=d155c04d49da931d8864a9201a68d948",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic_source%2F9d%2Fc2%2Fdd%2F9dc2ddda0a69053caa0ef363c0c0bc25.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537223&t=52addf51423520e39e0c06a13482544f",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic%2Fcc%2F87%2Fe6%2Fcc87e68064c08c2b313944b73620b56a.jpeg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537223&t=860da1012ceeefcb955cd971222fb687",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic%2F4d%2F63%2Fbd%2F4d63bd0b3bf8cc9aa0dc3e1111646b1c.jpeg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537223&t=7b3ee185342b4de17584585a2a245051",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic%2Fdb%2Ff6%2Ffe%2Fdbf6feb296383e384b3572079ca6c66b.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537223&t=de453f3e4440a02239c67831d1e2c7d5",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic%2F9f%2Fd0%2Fcd%2F9fd0cdf995a20a7e616c1d05decf126e.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537223&t=ed3593413942a70a55a9839f1794a721",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic_source%2F15%2Fc0%2F2a%2F15c02a241489ea30ba9f40dc8d094837.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537223&t=7acecf2297fa976e22911cfa7467e85b",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic_source%2Fa4%2F83%2F85%2Fa483856ec272cc75ab8ae9ec8068b9ce.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537223&t=886f6259ffa80d1aab57b613b8b34aa6",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic_source%2F7d%2F5c%2Fe1%2F7d5ce116c4c779aa52099ec8d880366b.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537223&t=f73b024d5c327be261e579f9f650ba2d",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic_source%2F42%2Fb3%2F07%2F42b30724fa786ad61edcf8d18765acbb.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537223&t=8f3959a144e3c190fb2afe7e0f9da1e3",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fc-ssl.duitang.com%2Fuploads%2Fitem%2F202006%2F26%2F20200626152513_Cr28j.thumb.1000_0.jpeg&refer=http%3A%2F%2Fc-ssl.duitang.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537223&t=986f6ef515ea3b2e617f050a3e074c06",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic%2Fc8%2F5d%2F59%2Fc85d595ed206fa63bb7bc7d7d9d17353.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537223&t=7595ede408d496cf7db8b41b8c77322b",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic%2Ffb%2F62%2Fc5%2Ffb62c55cb13f4f5f6702b02fbe59343b.jpeg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537223&t=1adb3794a3c8d32c4a586ff35a3f61de",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic%2Fe5%2F5f%2Ff5%2Fe55ff57c1af811a51555b4836acdca1f.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537223&t=f315bafb9915383bc34d06a8e8692c0e",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fc-ssl.duitang.com%2Fuploads%2Fitem%2F202006%2F17%2F2020061792937_ZXQCe.thumb.1000_0.jpeg&refer=http%3A%2F%2Fc-ssl.duitang.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537223&t=6f2818db60d33dc2cf40b74edc497df7",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic%2F0e%2F9b%2F29%2F0e9b29545b0809e3e4cb3250f8b9229b.jpeg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537223&t=d297911e4a80068d3dcbccc9a138b774",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic%2F6a%2F6c%2Ff5%2F6a6cf5bf4d8c084bce791092060bd2d7.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537223&t=09c9064c5a1e106c155d323846434aa2",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic%2Fa4%2Fe3%2Fc8%2Fa4e3c8f7ff7301240bb8393cd445b5f0.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537223&t=a5523007a443e71a373d4e3138802d70",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic_source%2F2a%2Fb7%2Fca%2F2ab7ca9a167cc6eb9f3e41c038c72240.jpeg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537223&t=fa1e805bfd6b48facd3892261edf2f7a",
+    //     "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fup.enterdesk.com%2Fedpic%2F94%2F96%2Ff7%2F9496f719d02b9bc2513a88c81873bdb6.jpg&refer=http%3A%2F%2Fup.enterdesk.com&app=2002&size=f999910000&q=a80&n=0&g=0n&fmt=auto?sec=1657537223&t=fa28652dcc2ec5a3df5475f5e03715bf",
+    // ]
+
+    // var symbolList=[
+    //     '黄鑫',
+    //     '李圣凡',
+    //     '曾超',
+    //     '陈斌',
+    //     '陈奕江',
+    //     '丁姜棋',
+    //     '董豪烨',
+    //     '冯潇',
+    //     '付毅宁',
+    //     '李玉桥',
+    //     '林澄蕾',
+    //     '刘佳聪',
+    //     '刘家成',
+    //     '马婷燕',
+    //     '梅子源',
+    //     '邱大鸿',
+    //     '尚明向',
+    //     '盛晗誉',
+    //     '盛涛',
+    //     '王思思',
+    //     '王伟',
+    //     '王熠昂',
+    //     '王泳彬',
+    //     '王仲友',
+    //     '魏鑫黄',
+    //     '吾俊杰',
+    //     '吴梦婷',
+    //     '吴千喜',
+    //     '吴雅青',
+    //     '吴悠',
+    //     '杨淞宇',
+    //     '杨锬',
+    //     '杨云慧',
+    //     '于胜杰',
+    //     '余建强',
+    //     '袁杰',
+    //     '曾文雅',
+    //     '张泷',
+    //     '张全',
+    //     '赵玉贤',
+    //     '郑文尧',
+    //     '朱春蓉',
+    //     '庄宇',
+    //     '邹常涛',
+    //     '谢明雨',
+    //     '李南颖',
+    //     '王迪',
+    //     '宁争胜',
+    //     '章罗峰',
+    // ]
+    var personArray=[]
+    var symbolList=[]
+    var test=[]
+    var layer = new THREE.Object3D();
+    let scene, camera, renderer, controls;
+    //设置放入场景中的物体数组
+    const objects = [];
+    //各种形状的位置存放对象
+    const targets = {
+        table: [],//列表,
+        grid: [],//网格
+        helix: [],//环形
+        sphere: []//球体
+    };
+    window.addEventListener("message", function (event) {
+        var data = event.data;
+        console.log("从vue中获得的数据", data);
+        // 定义一个变量去接收,然后就可以获得vue传过来的数据
+        test = data.params;
+        personArray=test[0]
+        symbolList=test[1]
+        console.log("从vue中获得的personArray",personArray)
+        console.log("从vue中获得的symbolList",symbolList)
+        zhunbei()
+    }, '*')
+
+    function zhunbei(){
+        var table = new Array;
+        for (var i = 0; i < test.length*5; i+=5) {
+            // table[i] = symbolList[(i/5)]
+            // table[i+1]=personArray[(i/5)]
+            // table[i+2]='test'
+            // table[i+3]= (i/5)%5 % 20 + 1;
+            // table[i+4]= Math.floor(((i/5)%5)/20) + 1;
+            var j=Math.floor(i/5);
+            table[i]=symbolList[j]
+            table[i+1]=personArray[j]
+            table[i+2]='test'
+            table[i+3]=j%10+1;
+            table[i+4]=Math.floor(j/10)+1
+        }
+        console.log(table)
+
+        // let scene, camera, renderer, controls;
+        //设置放入场景中的物体数组
+        // const objects = [];
+        //各种形状的位置存放对象
+        // const targets = {
+        //     table: [],//列表,
+        //     grid: [],//网格
+        //     helix: [],//环形
+        //     sphere: []//球体
+        // };
+        // var layer = new THREE.Object3D();
+        init();
+        animate();
+    }
+
+    function init() {
+        const felidView = 40;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        //设置相机
+        camera = new THREE.PerspectiveCamera(felidView, width / height, 1, 80000);
+        //设置相机的位置
+        camera.position.z = 3000;
+        //场景
+        scene = new THREE.Scene();
+
+        // var layer = new THREE.Object3D();
+        var len = table.length;
+        scene.add(layer);
+        for (let i = 0; i < len; i += 5) {
+            var element = document.createElement('div');
+            element.className = 'element';
+            element.style.backgroundColor = 'rgba( 238,237,221,' + (Math.random() * 0.5 + 0.25) + ')';
+
+            var number = document.createElement('div');
+            number.className = 'number';
+            number.textContent = i / 5 + 1;
+            number.style.top='5px'
+            number.style.left='100px'
+            element.appendChild(number);
+
+            var symbol = document.createElement('div');
+            symbol.className = 'symbol';
+            symbol.textContent = table[i];
+            element.appendChild(symbol);
+
+            var picture = document.createElement('img');
+            console.log("detail",picture)
+            picture.className = 'picture';
+            picture.src=table[i+1];
+            picture.width=80;
+            picture.height=80;
+            picture.style.position='relative'
+            picture.style.top='30px'
+            picture.style.left='0px'
+            console.log("detail",picture.innerHTML)
+            element.appendChild(picture);
+//表格
+            var object = new THREE.CSS3DObject(element);
+            // object = new THREE.CSS3DObject(element);
+            object.position.x = Math.random() * 4000 - 2000;
+            object.position.y = Math.random() * 4000 - 2000;
+            object.position.z = Math.random() * 4000 - 2000;
+            // scene.add(object);
+            layer.add(object);
+            objects.push(object);
+
+            var obj = new THREE.Object3D();
+            obj.position.x = ( table[ i + 3 ] * 140 ) - 620;
+            obj.position.y = - ( table[ i + 4 ] * 180 ) + 600;
+            targets.table.push(obj);
+        }
+
+//球体
+        var vector = new THREE.Vector3();
+        var len = objects.length
+        for (var i = 0; i < len; ++i) {
+            //弧度值
+            let phi = Math.acos(-1 + (2 * i) / len);
+            let theta = Math.sqrt(len * Math.PI) * phi;
+            var object = new THREE.Object3D();
+
+            object.position.x = 900 * Math.cos(theta) * Math.sin(phi);
+            object.position.y = 900 * Math.sin(theta) * Math.sin(phi);
+            object.position.z = -900 * Math.cos(phi);
+            //800影响半径
+            vector.copy(object.position).multiplyScalar(2);
+            object.lookAt(vector);
+            targets.sphere.push(object);
+        }
+
+
+//螺旋
+        var vector = new THREE.Vector3();
+        var len = objects.length
+        for (var i = 0; i < len; ++i) {
+            // var phi = i * 0.213 + Math.PI;
+            var phi = i * 0.4 + Math.PI;
+            const object = new THREE.Object3D();
+            object.position.x = 500 * Math.sin(phi);
+            // object.position.y = -(i * 8) + 550;
+            // object.position.y = -(i * 8) + 500;
+            object.position.y = -(i * 12) + 500;
+            object.position.z = 500 * Math.cos(phi + Math.PI);
+            //500和12影响半径、间距
+            vector.x = object.position.x * 2;
+            vector.y = object.position.y;
+            vector.z = object.position.z * 2;
+            object.lookAt(vector);
+            targets.helix.push(object);
+        }
+
+//多重表格
+        var len = objects.length
+        for (var i=0;i<len;++i){
+            var object = new THREE.Object3D();
+            object.position.x=((i%3)*300);
+            object.position.y=(-(Math.floor(i/3)%3)*400)+500;
+            object.position.z=(Math.floor(i/9))*500-2000;
+            targets.grid.push(object);
+        }
+
+        renderer = new THREE.CSS3DRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.domElement.style.position='absolute';
+        document.getElementById('container').appendChild(renderer.domElement);
+
+        //轨迹球相机控制器
+        controls = new THREE.TrackballControls(camera, renderer.domElement);
+        controls.autoRotate = true;
+        controls.rotateSpeed = 0.5;
+        controls.minDistance = 100;
+        controls.maxDistance = 10000;
+        controls.addEventListener('change', render);
+
+        var button = document.getElementById('table');
+        button.addEventListener('click', function (e) {
+            transform(targets.table, 1000);
+        }, false);
+
+        var button = document.getElementById('sphere');
+        button.addEventListener('click', function (e) {
+            transform(targets.sphere, 1000);
+        }, false);
+
+        var button = document.getElementById('helix');
+        button.addEventListener('click', function (e) {
+            transform(targets.helix, 1000);
+        }, false);
+
+        var button = document.getElementById('grid');
+        button.addEventListener('click', function (e) {
+            transform(targets.grid, 1000);
+        }, false);
+
+        transform(targets.table, 1000);
+        window.addEventListener('resize', onWindowResize, false);
+    }
+
+    function transform( targets, duration ) {
+        TWEEN.removeAll();
+        for (var i=0;i<objects.length;++i) {
+            var object=objects[i];
+            var target=targets[i];
+
+            new TWEEN.Tween(object.position)
+                .to({
+                    x: target.position.x,
+                    y: target.position.y,
+                    z: target.position.z
+                }, Math.random() * duration + duration)
+                .easing(TWEEN.Easing.Exponential.InOut)
+                .start();
+
+            new TWEEN.Tween(object.rotation)
+                .to({
+                    x: target.rotation.x,
+                    y: target.rotation.y,
+                    z: target.rotation.z
+                }, Math.random() * duration + duration)
+                .easing(TWEEN.Easing.Exponential.InOut)
+                .start();
+        }
+
+        // 这个补间用来在位置与旋转补间同步执行，通过onUpdate在每次更新数据后渲染scene和camera
+        new TWEEN.Tween(this)
+            .to({}, duration * 2)
+            .onUpdate(render)
+            .start();
+    }
+
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight
+        camera.updateProjectionMatrix();
+        renderer.setSize( window.innerWidth, window.innerHeight );
+
+        render();
+    }
+
+    function animate() {
+        layer.rotation.y += 0.004;
+        requestAnimationFrame(animate);
+        TWEEN.update();
+        controls.update();
+        render()
+    }
+
+    function render() {
+        renderer.render(scene, camera);
+    }
+
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,11 @@
+.element:hover{
+    border: 4px solid rgba(254, 232, 235, 0.75) !important;
+    box-shadow: 0 0 12px rgba(255, 250,227, 0.75) !important;
+}
+/*.container {*/
+/*    background-color: #163d1c;*/
+/*    !*background-image:url(../../public/static/wall3D/img.png);*!*/
+/*    margin: 0;*/
+/*    font-family: Helvetica, sans-serif;*/
+/*    overflow: hidden;*/
+/*}*/
